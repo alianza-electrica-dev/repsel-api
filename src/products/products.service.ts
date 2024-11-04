@@ -1,26 +1,66 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import axios from 'axios';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(private dataSource: DataSource) {}
+
+  async findAllPrices() {
+    const query = `
+      SELECT 
+        ItemCode AS SKU,
+        Price AS Precio,
+        Price AS Precio_Comparacion,
+        CASE 
+          WHEN ISNULL(Currency, '') = '' THEN 'MXN' 
+          ELSE Currency 
+        END AS Moneda
+      FROM 
+        ITM1 
+      WHERE 
+        PriceList = 3
+        AND ItemCode IN (
+          SELECT 
+            ItemCode 
+          FROM 
+            OITM 
+          WHERE 
+            QryGroup7 IN ('Y')
+        )
+    `;
+
+    const productsPrices = await this.dataSource.query(query);
+
+    if (productsPrices.length === 0)
+      throw new NotFoundException('Error loading product prices');
+
+    return productsPrices;
   }
 
-  findAll() {
-    return `This action returns all products`;
-  }
+  async updatePrices() {
+    const newProductPrices = await this.findAllPrices();
+    const repselKey = process.env.REPSEL_KEY;
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
-  }
+    try {
+      const { data } = await axios.put(
+        'https://repsel.com.mx/api/actualizar-precios',
+        { product: newProductPrices },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: repselKey,
+          },
+        },
+      );
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+      return data;
+    } catch (error) {
+      throw new BadRequestException('Fail to connect with respel API');
+    }
   }
 }
