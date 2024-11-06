@@ -13,13 +13,13 @@ export class ProductsService {
   async findAllPrices() {
     const query = `
       SELECT 
-        ItemCode AS SKU,
-        Price AS Precio,
-        Price AS Precio_Comparacion,
+        ItemCode AS sku,
+        Price AS precio,
+        Price AS precio_comparacion,
         CASE 
           WHEN ISNULL(Currency, '') = '' THEN 'MXN' 
           ELSE Currency 
-        END AS Moneda
+        END AS moneda
       FROM 
         ITM1 
       WHERE 
