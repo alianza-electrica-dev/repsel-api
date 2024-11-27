@@ -14,6 +14,7 @@ export const createDataSources = (configService: ConfigService) => ({
       encrypt: true,
       trustServerCertificate: true,
     },
+    requestTimeout: 3000,
   }),
 
   dbFG: new DataSource({
@@ -28,5 +29,6 @@ export const createDataSources = (configService: ConfigService) => ({
       encrypt: true,
       trustServerCertificate: true,
     },
+    requestTimeout: 3000,
   }),
 });
