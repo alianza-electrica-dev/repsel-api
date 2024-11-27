@@ -16,6 +16,7 @@ export class ProductsService {
 
     const products = await this.dbAlianza.query(query);
 
+    //? By request of the marketing department all the comparison price property will be assigned to 0 before the prices are updated
     products.forEach((product) => (product.precio_comparacion = 0));
 
     if (products.length === 0)
