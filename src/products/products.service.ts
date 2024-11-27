@@ -1,66 +1,83 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { DataSource } from 'typeorm';
+import { getRepselKey, querySearch } from './helpers';
+import { Product } from 'src/interfaces';
 
 @Injectable()
 export class ProductsService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    @Inject('DB_ALIANZA_DATASOURCE') private dbAlianza: DataSource,
+    @Inject('DB_FG_DATASOURCE') private dbFG: DataSource,
+  ) {}
 
-  async findAllPrices() {
-    const query = `
-      SELECT 
-        ItemCode AS sku,
-        Price AS precio,
-        Price AS precio_comparacion,
-        CASE 
-          WHEN ISNULL(Currency, '') = '' THEN 'MXN' 
-          ELSE Currency 
-        END AS moneda
-      FROM 
-        ITM1 
-      WHERE 
-        PriceList = 3
-        AND ItemCode IN (
-          SELECT 
-            ItemCode 
-          FROM 
-            OITM 
-          WHERE 
-            QryGroup7 IN ('Y')
-        )
-    `;
+  async findAllPrices(repselGroup: number) {
+    const query = querySearch(repselGroup);
 
-    const productsPrices = await this.dataSource.query(query);
+    const products = await this.dbAlianza.query(query);
 
-    if (productsPrices.length === 0)
+    products.forEach((product) => (product.precio_comparacion = 0));
+
+    if (products.length === 0)
       throw new NotFoundException('Error loading product prices');
 
-    return productsPrices;
+    return {
+      success: true,
+      message: 'SAP products loaded correctly',
+      products,
+    };
   }
 
-  async updatePrices() {
-    const newProductPrices = await this.findAllPrices();
-    const repselKey = process.env.REPSEL_KEY;
+  async updatePrices(repselGroup: number) {
+    const { products } = await this.findAllPrices(repselGroup);
+    const repselKey = getRepselKey(repselGroup);
 
-    try {
-      const { data } = await axios.put(
-        'https://repsel.com.mx/api/actualizar-precios',
-        { product: newProductPrices },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: repselKey,
+    const batchSize = 500;
+
+    this.processBatches(products, batchSize, repselKey);
+
+    return { message: 'Proceso de actualización iniciado.' };
+  }
+
+  private async processBatches(
+    products: Product[],
+    batchSize: number,
+    repselKey: string,
+  ) {
+    const totalBatches = Math.ceil(products.length / batchSize);
+
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+      const startIndex = batchIndex * batchSize;
+      const batch = products.slice(startIndex, startIndex + batchSize);
+
+      console.log(`Procesando lote ${batchIndex + 1} de ${totalBatches}`);
+
+      try {
+        const { data } = await axios.put(
+          'https://repsel.com.mx/api/actualizar-precios',
+          { product: batch },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: repselKey,
+            },
           },
-        },
-      );
+        );
 
-      return data;
-    } catch (error) {
-      throw new BadRequestException('Fail to connect with respel API');
+        console.log(`Lote ${batchIndex + 1} procesado con éxito:`);
+        console.log(`Estatus: ${data.estatus} Mensaje: ${data.mensaje}`);
+      } catch (error) {
+        console.error(
+          `Error al procesar el lote ${batchIndex + 1}:`,
+          error.message,
+        );
+      }
+
+      if (batchIndex < totalBatches - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+      }
     }
+
+    console.log('Todos los lotes procesados.');
   }
 }

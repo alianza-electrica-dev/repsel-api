@@ -5,13 +5,23 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Get()
-  findAll() {
-    return this.productsService.findAllPrices();
+  @Get('/alianza')
+  findAllAlianza() {
+    return this.productsService.findAllPrices(7);
   }
 
-  @Put()
-  update() {
-    return this.productsService.updatePrices();
+  @Get('/fg')
+  findAllFG() {
+    return this.productsService.findAllPrices(5);
+  }
+
+  @Put('/alianza')
+  updateAlianza() {
+    return this.productsService.updatePrices(7);
+  }
+
+  @Put('/fg')
+  updateFG() {
+    return this.productsService.updatePrices(5);
   }
 }
