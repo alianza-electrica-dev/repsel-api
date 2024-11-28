@@ -17,6 +17,14 @@ This API is designed to automatically update product prices on the **Repsel** pl
 1. **Connection with SAP**: The API obtains the most updated prices from SAP.
 2. **Price Update in Repsel**: Through PUT queries, the API updates the prices of the products on the Repsel platform.
 
+## PricesList and GroupRepselID
+
+| Branch  | Price List SAP | RepselProperty |
+| :-----: | :------------: | :------------: |
+| Alianza |       3        |       7        |
+|   FG    |       3        |       5        |
+|   FGM   |       1        |       2        |
+
 ## Installation
 
 ```bash

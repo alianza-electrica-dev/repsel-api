@@ -1,4 +1,4 @@
-export const querySearch = (repselGroup: number): string => {
+export const querySearch = (repselGroup: number, priceList: number): string => {
   const query = `
       SELECT
         ItemCode AS sku,
@@ -11,7 +11,7 @@ export const querySearch = (repselGroup: number): string => {
       FROM
         ITM1
       WHERE
-        PriceList = 3
+        PriceList = ${priceList}
         AND ItemCode IN (
           SELECT
             ItemCode

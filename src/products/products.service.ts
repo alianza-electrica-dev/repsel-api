@@ -9,16 +9,19 @@ export class ProductsService {
   constructor(
     @Inject('DB_ALIANZA_DATASOURCE') private dbAlianza: DataSource,
     @Inject('DB_FG_DATASOURCE') private dbFG: DataSource,
+    @Inject('DB_FGM_DATASOURCE') private dbFGM: DataSource,
   ) {}
 
-  async findAllPrices(repselGroup: number) {
-    const query = querySearch(repselGroup);
+  async findAllPrices(repselGroup: number, priceList: number) {
+    const query = querySearch(repselGroup, priceList);
     let products = null;
 
     if (repselGroup === 7) {
       products = await this.dbAlianza.query(query);
     } else if (repselGroup === 5) {
       products = await this.dbFG.query(query);
+    } else if (repselGroup === 2) {
+      products = await this.dbFGM.query(query);
     }
 
     //? By request of the marketing department all the comparison price property will be assigned to 0 before the prices are updated
@@ -34,8 +37,8 @@ export class ProductsService {
     };
   }
 
-  async updatePrices(repselGroup: number) {
-    const { products } = await this.findAllPrices(repselGroup);
+  async updatePrices(repselGroup: number, priceList: number) {
+    const { products } = await this.findAllPrices(repselGroup, priceList);
     const repselKey = getRepselKey(repselGroup);
 
     const batchSize = 500;

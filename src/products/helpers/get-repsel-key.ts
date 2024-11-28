@@ -6,6 +6,9 @@ export const getRepselKey = (repselGroup: number): string => {
     case 5:
       return process.env.REPSEL_FG_KEY;
 
+    case 2:
+      return process.env.REPSEL_FGM_KEY;
+
     default:
       return '';
   }
