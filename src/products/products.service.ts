@@ -13,8 +13,13 @@ export class ProductsService {
 
   async findAllPrices(repselGroup: number) {
     const query = querySearch(repselGroup);
+    let products = null;
 
-    const products = await this.dbAlianza.query(query);
+    if (repselGroup === 7) {
+      products = await this.dbAlianza.query(query);
+    } else if (repselGroup === 5) {
+      products = await this.dbFG.query(query);
+    }
 
     //? By request of the marketing department all the comparison price property will be assigned to 0 before the prices are updated
     products.forEach((product) => (product.precio_comparacion = 0));
