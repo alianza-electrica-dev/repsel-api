@@ -19,11 +19,12 @@ This API is designed to automatically update product prices on the **Repsel** pl
 
 ## PricesList and GroupRepselID
 
-| Branch  | Price List SAP | RepselProperty |
-| :-----: | :------------: | :------------: |
-| Alianza |       3        |       7        |
-|   FG    |       3        |       5        |
-|   FGM   |       1        |       2        |
+|  Branch  | Price List SAP | RepselProperty |
+| :------: | :------------: | :------------: |
+| Alianza  |       3        |       7        |
+|    FG    |       3        |       5        |
+|   FGM    |       1        |       2        |
+| Pacifico |       1        |       1        |
 
 ## Installation
 

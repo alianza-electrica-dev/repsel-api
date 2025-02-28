@@ -22,7 +22,18 @@ import { createDataSources } from '../config';
         createDataSources(configService).dbFGM.initialize(),
       inject: [ConfigService],
     },
+    {
+      provide: 'DB_PACIFICO_DATASOURCE',
+      useFactory: (configService: ConfigService) =>
+        createDataSources(configService).dbPacifico.initialize(),
+      inject: [ConfigService],
+    },
   ],
-  exports: ['DB_ALIANZA_DATASOURCE', 'DB_FG_DATASOURCE', 'DB_FGM_DATASOURCE'],
+  exports: [
+    'DB_ALIANZA_DATASOURCE',
+    'DB_FG_DATASOURCE',
+    'DB_FGM_DATASOURCE',
+    'DB_PACIFICO_DATASOURCE',
+  ],
 })
 export class DatabaseModule {}

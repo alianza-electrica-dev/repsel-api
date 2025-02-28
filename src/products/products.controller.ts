@@ -10,6 +10,11 @@ export class ProductsController {
     return this.productsService.findAllPrices(7, 3);
   }
 
+  @Get('/pacifico')
+  findAllPacifico() {
+    return this.productsService.findAllPrices(1, 1);
+  }
+
   @Get('/fg')
   findAllFG() {
     return this.productsService.findAllPrices(5, 3);
@@ -33,5 +38,10 @@ export class ProductsController {
   @Put('/fgm')
   updateFGM() {
     return this.productsService.updatePrices(2, 1);
+  }
+
+  @Put('/pacifico')
+  updatePACIFICO() {
+    return this.productsService.updatePrices(1, 1);
   }
 }
