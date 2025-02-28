@@ -17,6 +17,21 @@ export const createDataSources = (configService: ConfigService) => ({
     requestTimeout: 3000,
   }),
 
+  dbPacifico: new DataSource({
+    type: 'mssql',
+    host: configService.get<string>('DB_PACIFICO_HOST'),
+    port: +configService.get<number>('DB_PACIFICO_PORT'),
+    database: configService.get<string>('DB_PACIFICO_NAME'),
+    username: configService.get<string>('DB_PACIFICO_USERNAME'),
+    password: configService.get<string>('DB_PACIFICO_PASSWORD'),
+    synchronize: true,
+    options: {
+      encrypt: true,
+      trustServerCertificate: true,
+    },
+    requestTimeout: 3000,
+  }),
+
   dbFG: new DataSource({
     type: 'mssql',
     host: configService.get<string>('DB_FG_HOST'),

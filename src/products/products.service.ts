@@ -1,4 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import axios from 'axios';
 import { DataSource } from 'typeorm';
 import { getRepselKey, querySearch } from './helpers';
@@ -6,10 +12,12 @@ import { Product } from 'src/interfaces';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
   constructor(
     @Inject('DB_ALIANZA_DATASOURCE') private dbAlianza: DataSource,
     @Inject('DB_FG_DATASOURCE') private dbFG: DataSource,
     @Inject('DB_FGM_DATASOURCE') private dbFGM: DataSource,
+    @Inject('DB_PACIFICO_DATASOURCE') private dbPacifico: DataSource,
   ) {}
 
   async findAllPrices(repselGroup: number, priceList: number) {
@@ -22,6 +30,8 @@ export class ProductsService {
       products = await this.dbFG.query(query);
     } else if (repselGroup === 2) {
       products = await this.dbFGM.query(query);
+    } else if (repselGroup === 1) {
+      products = await this.dbPacifico.query(query);
     }
 
     //? By request of the marketing department all the comparison price property will be assigned to 0 before the prices are updated
@@ -40,7 +50,6 @@ export class ProductsService {
   async updatePrices(repselGroup: number, priceList: number) {
     const { products } = await this.findAllPrices(repselGroup, priceList);
     const repselKey = getRepselKey(repselGroup);
-
     const batchSize = 500;
 
     this.processBatches(products, batchSize, repselKey);
@@ -59,7 +68,11 @@ export class ProductsService {
       const startIndex = batchIndex * batchSize;
       const batch = products.slice(startIndex, startIndex + batchSize);
 
-      console.log(`Procesando lote ${batchIndex + 1} de ${totalBatches}`);
+      this.logger.log(`Procesando lote ${batchIndex + 1} de ${totalBatches}`);
+
+      if (!repselKey) {
+        throw new UnauthorizedException('Falta la clave de autorización');
+      }
 
       try {
         const { data } = await axios.put(
@@ -73,10 +86,10 @@ export class ProductsService {
           },
         );
 
-        console.log(`Lote ${batchIndex + 1} procesado con éxito:`);
-        console.log(`Estatus: ${data.estatus} Mensaje: ${data.mensaje}`);
+        this.logger.log(`Lote ${batchIndex + 1} procesado con éxito:`);
+        this.logger.log(`Estatus: ${data.estatus} Mensaje: ${data.mensaje}`);
       } catch (error) {
-        console.error(
+        Logger.error(
           `Error al procesar el lote ${batchIndex + 1}:`,
           error.message,
         );
@@ -87,6 +100,6 @@ export class ProductsService {
       }
     }
 
-    console.log('Todos los lotes procesados.');
+    this.logger.log('Todos los lotes procesados.');
   }
 }
